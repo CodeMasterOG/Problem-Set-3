@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar 14 14:40:53 2023
+
+@author: twinw
+"""
+
+import arcpy
+arcpy.env.overwriteOutput= True
+arcpy.env.workspace = "C:/Code/Week8/PS3"
+#for file in arcpy.ListFiles():
+    #print(file)
+c= "C:/Code/Week8/PS3/Countries_WGS84.shp"
+p= "C:/Code/Week8/PS3/nhlrosters.shp"
+nhl= "C:/Code/Week8/PS3/nhl_clip.shp"
+#If needed, Pull to check new fields.
+#fieldList = arcpy.ListFields(c)
+#for field in fieldList:
+   #print (field.name)
+   
+#Select sweden in polygon.
+sweden=arcpy.management.SelectLayerByAttribute(c, "NEW_SELECTION","CNTRY_NAME = 'Sweden'",None)
+#Create the new feature.
+arcpy.management.CopyFeatures(sweden, 'fcswed')
+f= "C:/Code/Week8/PS3/fcswed.shp"
+#Clip NHLRoster Sweden polygon.
+arcpy.analysis.Clip("nhlrosters",f,nhl, None)
+#confirm fields if needed.
+#fieldList = arcpy.ListFields(nhl)
+#for field in fieldList:
+  #print (field.name)
+#Set parameters.
+fn="firstName"
+ln="lastName"
+pos="position"
+h="height"
+w="weight"
+fields=(fn,ln,pos,h,w)
+sql=(None, "GROUP BY position")
+infields=(h,w)
+hcm=(h*2.54)
+wpd=(w*.453)
+#select and print all NHL player from Sweden with posision, Height, and Weight.
+with arcpy.da.SearchCursor(nhl,fields,sql_clause=sql) as cursor:
+    for row in cursor:
+        print(row[0] +" "+row[1]+": "+row[2]+": "+str(row[3])+": "+str(row[4])) 
+#attempt to add new height and weight fields.
+with arcpy.da.InsertCursor(nhl, infields) as cursor:
+    cursor.insertRow((float(hcm),float(wpd)))
